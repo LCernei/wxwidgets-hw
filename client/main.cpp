@@ -3,30 +3,100 @@
 
 #include <grpc/grpc.h>
 #include <grpcpp/create_channel.h>
-
 #include <iostream>
 
 
-int main(int argc, char* argv[])
+
+
+
+// wxWidgets "Hello world" Program
+// For compilers that support precompilation, includes "wx/wx.h".
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
+class MyApp : public wxApp
 {
-    // Setup request
-    expcmake::NameQuerry query;
-    expcmake::Address result;
-    query.set_name("John");
+public:
+	virtual bool OnInit();
+};
 
-    // Call
-    auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
-    std::unique_ptr<expcmake::AddressBook::Stub> stub = expcmake::AddressBook::NewStub(channel);
-    grpc::ClientContext context;
-    grpc::Status status = stub->GetAddress(&context, query, &result);
+class MyFrame : public wxFrame
+{
+public:
+	MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+private:
+	void OnHello(wxCommandEvent& event);
+	void OnExit(wxCommandEvent& event);
+	void OnAbout(wxCommandEvent& event);
+	wxDECLARE_EVENT_TABLE();
+};
 
-    // Output result
-    std::cout << "I got:" << std::endl;
-    std::cout << "Name: " << result.name() << std::endl;
-    std::cout << "City: " << result.city() << std::endl;
-    std::cout << "Zip:  " << result.zip() << std::endl;
-    std::cout << "Street: " << result.street() << std::endl;
-    std::cout << "Country: " << result.country() << std::endl;
+enum
+{
+	ID_Hello = 1
+};
 
-    return 0;
+wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+EVT_MENU(ID_Hello, MyFrame::OnHello)
+EVT_MENU(wxID_EXIT, MyFrame::OnExit)
+EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
+wxEND_EVENT_TABLE()
+wxIMPLEMENT_APP(MyApp);
+
+bool MyApp::OnInit()
+{
+	MyFrame* frame = new MyFrame("Hello World", wxPoint(50, 50), wxSize(450, 340));
+	frame->Show(true);
+	return true;
+}
+
+MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
+	: wxFrame(NULL, wxID_ANY, title, pos, size)
+{
+	wxMenu* menuFile = new wxMenu;
+	menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
+		"Help string shown in status bar for this menu item");
+	menuFile->AppendSeparator();
+	menuFile->Append(wxID_EXIT);
+	wxMenu* menuHelp = new wxMenu;
+	menuHelp->Append(wxID_ABOUT);
+	wxMenuBar* menuBar = new wxMenuBar;
+	menuBar->Append(menuFile, "&File");
+	menuBar->Append(menuHelp, "&Help");
+	SetMenuBar(menuBar);
+	CreateStatusBar();
+	SetStatusText("Welcome to wxWidgets!");
+}
+
+void MyFrame::OnExit(wxCommandEvent& event)
+{
+	Close(true);
+}
+
+void MyFrame::OnAbout(wxCommandEvent& event)
+{
+	// *************************************************************************
+	// CODE TO SEND A GRPC MESSAGE
+	// Setup request
+	expcmake::NameQuerry query;
+	expcmake::Address result;
+	query.set_name("John");
+
+	// Call
+	auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
+	std::unique_ptr<expcmake::AddressBook::Stub> stub = expcmake::AddressBook::NewStub(channel);
+	grpc::ClientContext context;
+	grpc::Status status = stub->GetAddress(&context, query, &result);
+	// *************************************************************************
+
+
+	wxMessageBox(result.name(),
+		"About Hello World", wxOK | wxICON_INFORMATION);
+}
+
+void MyFrame::OnHello(wxCommandEvent& event)
+{
+	wxLogMessage("Hello world from wxWidgets!");
 }
